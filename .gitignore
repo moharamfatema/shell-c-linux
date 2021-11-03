@@ -2,3 +2,4 @@ main
 sshkeys
 sshkeys.pub
 .gitignore
+.vscode
