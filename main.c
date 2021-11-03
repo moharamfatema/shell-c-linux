@@ -9,9 +9,9 @@
 #include <sys/types.h>
 #include <sys/wait.h>
 #include <sys/resource.h>
-#define MAXLEN 100
-#define ARGLEN 20
-#define MAXARGS 10
+#define MAXLEN 4096
+#define ARGLEN 128
+#define MAXARGS 32
 
 FILE * fptr ;
 pid_t childpid;
@@ -29,43 +29,44 @@ int main(){
 	fptr = fopen("logs.txt","w");
 
 	/*child signal handler*/
-  	signal(SIGCHLD, handler);
+  	signal(SIGCHLD,handler);
+
+	/*initializing vars*/
+	char command[MAXLEN];
+	char * token;char * rest;
+	char* args[MAXARGS];
+	int noofargs = 0;
+	int status;
 
 
 	/*extracting command from user*/
 	while(1){
-		//setbuf(STDOUT,NULL);
-		printf(">> ");
-		char command[MAXLEN];
+		setbuf(stdout,NULL);
+		printf("SHELL>> ");
 		scanf("%[^\n]s",command);
 		printf("command : %s\n",command);
 		setbuf(stdin,NULL);
 		if((strcmp(command,"exit")==0) || (strcmp(command,"exit &")==0))
 			return 0;
 		
-		char args[MAXARGS][ARGLEN];
-		char *rest = command;
-
-		//char * token = strtok(command," ");
-		char * token;
-		int noofargs = 0;
+		rest = command;
+		noofargs = 0;
 		while(token = strtok_r(rest," ",&rest)){
 			//add token to args
 			//printf("%d %s\n",noofargs,token);
-			strcpy(args[noofargs],token);
-			//strcat(args[noofargs],"\0");
+			args[noofargs] = token;
 			noofargs++;
 		}
-		//*args[noofargs]=NULL;
-		
-
-			
+		args[noofargs]=NULL;
+					
 		/*wait flag*/
 		int8_t willWait=(strcmp(args[noofargs-1],"&")==0)?0:1;
 		printf("will wait? %d\n",willWait);
-		
+		if (!willWait){
+			args[noofargs-1] = NULL;
+		}
 		/*new clean arr of args*/
-		char newargs[noofargs+1][ARGLEN];
+		/*char newargs[noofargs+1][ARGLEN];
 		int k = 0;
 		for(k = 0;k<((willWait)?noofargs-1:noofargs-2);k++){
 			strcpy(newargs[k],args[k+1]);	
@@ -73,13 +74,13 @@ int main(){
 			//printf("%d\t%s\n",k,newargs[k]);
 			if(k>MAXARGS)
 				break;
-		}//*newargs[k++]=NULL;
+		}//*newargs[k++]=NULL;*/
 		
 		/*printing args[]*/
 		printf("Arguments are:\n");
-		for (int i = 0; i<k;i++){
-			if(newargs[i])
-				printf("%d\t%s\n",i,newargs[i]);
+		for (int i = 0; i<noofargs;i++){
+			if(args[i])
+				printf("%d\t%s\n",i,args[i]);
 			else
 				break;
 		}
@@ -89,28 +90,15 @@ int main(){
 		/*executing command*/
 		int childid = fork();
 
-		int status;
 		printf("childid = %d\n",childid);
 		if(childid == 0){
 			/*child code*/
 			
 			printf("I am a child\n");
-/*			char *tmparr[2] = malloc(2*sizeof(char));
-			if (tmparr == NULL)
-			{
-				perror;
-				return 0;
-*/			
-			
-/*			strcpy(tmparr[0], "ls");
-			strcpy(tmparr[1], '\0');
-*/
-			char* tmp[] = {"ls",NULL};
-;			execvp(tmp[0],tmp);
-			
-			/*
-			printf("done with exec\n");
-			*/
+
+			//char* tmp[] = {"ls",NULL};
+			execvp(args[0],&args[0]);
+
 			return 0;
 		}else if(childid < 0){
 			perror("fork unsuccessfull\n");
