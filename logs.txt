@@ -1,1 +1,2 @@
-Process 24712 terminated
+Child process terminated
+Child process terminated

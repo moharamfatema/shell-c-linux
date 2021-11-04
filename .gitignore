@@ -3,3 +3,4 @@ sshkeys
 sshkeys.pub
 .gitignore
 .vscode
+logs.txt
