@@ -1,2 +1,0 @@
-Child process terminated
-Child process terminated
